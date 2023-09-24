@@ -1,1 +1,18 @@
 This Is First Page
+const { response } = require('express');
+
+var options = {
+    authorization:"bCkpT7VFvn3qujAYW61Xf4Ds2dKzLPZI5wheiOcUNQoSJtlGrxzpSve3fIbjPROZcdCDr9n1487YxhXl",
+    message:'police caught you',
+    numbers:['9136326700']
+};
+
+
+fast2sms.sendMessage(options)
+    .then((response) => {const fast2sms = require('fast-two-sms') 
+
+        console.log(response)
+    })
+    .catch((error) => {
+        console.log(error)
+    })

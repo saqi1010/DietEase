@@ -16,4 +16,17 @@ const registerPostApi = (async (req, res) => {
     res.send(result);
 });
 
+const usernameGetApi= (async (req,resp)=>{
+    let result =  await product.find({
+        "$0r":[
+            {username:{$regex:req.params.key}},
+            {phonenumber:{$regex:req.params.key}},
+
+        ]
+    });
+    resp.send(result)
+});
+
+
 module.exports = { registerPostApi };
+module.exports = { usernameGetApi };
