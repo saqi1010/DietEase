@@ -38,3 +38,77 @@ fast2sms.sendMessage(options)
     app.post("/upload",upload (req, resp)=>{
         resp.
     })
+
+
+
+
+
+
+
+
+
+
+    // email id exist api
+
+const zerobounce = require('zerobounce')(YOUR_API_KEY);
+
+const email = 'example@email.com'; // The email address to validate
+
+zerobounce.validate(email)
+  .then((response) => {
+    console.log('Email validation result:', response);
+  })
+  .catch((error) => {
+    console.error('Error validating email:', error);
+  });
+
+////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////
+
+// username get api 
+
+const express = require('express');
+const app = express();
+
+const usernames = ['user1', 'user2', 'user3'];  // Sample usernames
+
+app.get('/usernames', (req, res) => {
+  res.json({ usernames });
+});
+
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+});
+
+///////////////////////////////////////////////
+
+// password get api 
+
+const express = require('express');
+const passwordValidator = require('password-validator');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+const passwordSchema = new passwordValidator();
+passwordSchema
+  .is().min(8)  // Minimum length 8 characters
+  .is().max(100) // Maximum length 100 characters
+  .has().uppercase() // Must have at least one uppercase letter
+  .has().lowercase() // Must have at least one lowercase letter
+  .has().digits() // Must have at least one digit
+  .has().not().spaces(); // Should not have spaces
+
+app.get('/check-password', (req, res) => {
+  const password = req.query.password;
+
+  const isValid = passwordSchema.validate(password);
+
+  res.json({ isValid });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
