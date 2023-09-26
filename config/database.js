@@ -5,3 +5,4 @@ const databaseDetail = {
     dbName: 'Gym',
 };
 mongoose.connect(`mongodb://${databaseDetail.host}:${databaseDetail.port}/${databaseDetail?.dbName}`)
+module.exports = { databaseDetail }
