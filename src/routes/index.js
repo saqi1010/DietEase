@@ -2,7 +2,8 @@ const express = require('express');
 const config = require('../../config/database');
 const bodyParser = require('body-parser');
 const multer = require('multer');
-const { registerPostApi, sendOtpWithPhonNumber, verifyOtp, sendDummy, uploadProfileImage, dummyCheckApi } = require('../controllers/userController');
+const { registerPostApi, sendOtpWithPhonNumber, verifyOtp, sendDummy,
+    uploadProfileImage, dummyCheckApi, topCategoryListing, subCategoryListing } = require('../controllers/userController');
 const app = express();
 app.use(express.json());
 app.use(bodyParser.json());
@@ -28,13 +29,22 @@ app.post('/ImageUpload', (req, res) => {
 });
 
 
+app.get('/topCategory', topCategoryListing)
+
+app.post('/userId/:userId/topCategoryId/:topCategoryId', subCategoryListing)
+
+// app.post('/userId/:userId/t',subCategory)
+
+
+
+
 
 // Dummy check
 app.post('/dummy', dummyCheckApi);
 
 
 
-app.get("/seacrch/:key", usernameGetApi);
+// app.get("/seacrch/:key", usernameGetApi);
 
 
 module.exports = { app }

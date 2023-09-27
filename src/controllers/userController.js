@@ -1,5 +1,5 @@
 
-const { Register } = require("../models");
+const { Register, TopCategory } = require("../models");
 const twilio = require('twilio');
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
@@ -69,6 +69,7 @@ const sendOtpWithPhonNumber = (async (req, res) => {
         console.log('2', token)
         res.json({ success: true, message: 'OTP sent successfully', token });
     } catch (error) {
+
         console.error('Error sending OTP:', error);
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
@@ -100,7 +101,24 @@ const storage = multer.diskStorage({
 
 const uploadProfileImage = multer({ storage }).single("file");
 
+const topCategoryListing = (async (req, res) => {
+    let topCategoryAllData = await TopCategory.find();
+    topCategoryAllData = topCategoryAllData.map(item => {
+        const { _id, ...rest } = item.toObject();
+        return rest;
+    });
+    res.send(topCategoryAllData);
+});
 
+const subCategoryListing = (async (req, res) => {
+    const { userId, topCategoryId } = req.body;
+    let topCategoryAllData = await TopCategory.find();
+    topCategoryAllData = topCategoryAllData.map(item => {
+        const { _id, ...rest } = item.toObject();
+        return rest;
+    });
+    res.send(topCategoryAllData);
+});
 
 
 const dummyCheckApi = ((req, res) => {
@@ -137,4 +155,4 @@ const dummyCheckApi = ((req, res) => {
 
 
 
-module.exports = { registerPostApi, sendOtpWithPhonNumber, verifyOtp, uploadProfileImage, dummyCheckApi };
+module.exports = { registerPostApi, sendOtpWithPhonNumber, verifyOtp, uploadProfileImage, dummyCheckApi, topCategoryListing, subCategoryListing };
