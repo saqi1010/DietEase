@@ -31,7 +31,7 @@ app.post('/ImageUpload', (req, res) => {
 
 app.get('/topCategory', topCategoryListing)
 
-app.post('/userId/:userId/topCategoryId/:topCategoryId', subCategoryListing)
+app.get('/subCategory', subCategoryListing)
 
 // app.post('/userId/:userId/t',subCategory)
 

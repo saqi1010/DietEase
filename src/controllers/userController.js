@@ -1,5 +1,5 @@
 
-const { Register, TopCategory } = require("../models");
+const { Register, TopCategory, SubCategory } = require("../models");
 const twilio = require('twilio');
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
@@ -60,6 +60,7 @@ const registerPostApi = (async (req, res) => {
 });
 
 
+
 const sendOtpWithPhonNumber = (async (req, res) => {
     const { phoneNumber } = req.body;
     try {
@@ -103,6 +104,7 @@ const uploadProfileImage = multer({ storage }).single("file");
 
 const topCategoryListing = (async (req, res) => {
     let topCategoryAllData = await TopCategory.find();
+    console.log(topCategoryAllData)
     topCategoryAllData = topCategoryAllData.map(item => {
         const { _id, ...rest } = item.toObject();
         return rest;
@@ -110,15 +112,16 @@ const topCategoryListing = (async (req, res) => {
     res.send(topCategoryAllData);
 });
 
-const subCategoryListing = (async (req, res) => {
-    const { userId, topCategoryId } = req.body;
-    let topCategoryAllData = await TopCategory.find();
+const subCategoryListing = async (req, res) => {
+    // const { topCategoryId } = req.params;
+    let topCategoryAllData = await SubCategory.find();
+    console.log(topCategoryAllData)
     topCategoryAllData = topCategoryAllData.map(item => {
         const { _id, ...rest } = item.toObject();
         return rest;
     });
     res.send(topCategoryAllData);
-});
+};
 
 
 const dummyCheckApi = ((req, res) => {
