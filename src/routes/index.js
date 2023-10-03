@@ -3,7 +3,8 @@ const config = require('../../config/database');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const { registerPostApi, sendOtpWithPhonNumber, verifyOtp, sendDummy,
-    uploadProfileImage, dummyCheckApi, topCategoryListing, subCategoryListing } = require('../controllers/userController');
+    uploadProfileImage, dummyCheckApi, topCategoryListing, subCategoryListing, updateCategorySelection } = require('../controllers/userController');
+const { Nutrient } = require('../models');
 const app = express();
 app.use(express.json());
 app.use(bodyParser.json());
@@ -33,9 +34,7 @@ app.get('/topCategory', topCategoryListing)
 
 app.get('/subCategory', subCategoryListing)
 
-// app.post('/userId/:userId/t',subCategory)
-
-
+app.post('/update_SubCategory', updateCategorySelection);
 
 
 

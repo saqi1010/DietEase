@@ -1,5 +1,5 @@
 
-const { Register, TopCategory, SubCategory } = require("../models");
+const { Register, TopCategory, SubCategory, Nutrient } = require("../models");
 const twilio = require('twilio');
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
@@ -112,8 +112,7 @@ const topCategoryListing = (async (req, res) => {
     res.send(topCategoryAllData);
 });
 
-const subCategoryListing = async (req, res) => {
-    // const { topCategoryId } = req.params;
+const subCategoryListing = (async (req, res) => {
     let topCategoryAllData = await SubCategory.find();
     console.log(topCategoryAllData)
     topCategoryAllData = topCategoryAllData.map(item => {
@@ -121,7 +120,30 @@ const subCategoryListing = async (req, res) => {
         return rest;
     });
     res.send(topCategoryAllData);
-};
+});
+
+const updateCategorySelection = (async (req, res) => {
+    const { userId, subCategoryId, isSelected } = req.body;
+    try {
+        const nutrient = await Nutrient.findOne({ userId });
+        if (!nutrient) {
+            return res.status(404).json({ message: "User not found." });
+        }
+        const subCategory = nutrient.subCategoryData.find(item => item.subCategoryId == subCategoryId);
+        // console.warn("nutrient", nutrient?.subCategoryData);
+        if (!subCategory) {
+            return res.status(404).json({ message: "SubCategory not found." });
+        }
+        subCategory.isSelected = isSelected;
+        await nutrient.save();
+        res.json({ message: "Selection updated successfully." });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+})
+
+
 
 
 const dummyCheckApi = ((req, res) => {
@@ -158,4 +180,4 @@ const dummyCheckApi = ((req, res) => {
 
 
 
-module.exports = { registerPostApi, sendOtpWithPhonNumber, verifyOtp, uploadProfileImage, dummyCheckApi, topCategoryListing, subCategoryListing };
+module.exports = { registerPostApi, sendOtpWithPhonNumber, verifyOtp, uploadProfileImage, dummyCheckApi, topCategoryListing, subCategoryListing, updateCategorySelection };
