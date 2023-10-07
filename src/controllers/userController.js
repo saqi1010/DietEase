@@ -1,10 +1,12 @@
 
-const { Register, TopCategory, SubCategory, Nutrient } = require("../models");
+const { Register, TopCategory, SubCategory, Nutrient, MealCategory, MealSubCategory, MealPlanner } = require("../models");
 const twilio = require('twilio');
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
+const { escape } = require("querystring");
+const { warn } = require("console");
 // token genrator 
 
 const jwtSecret = 'sdjgfsdgfgdiweutrispvfwersgfjgsdjgf3453423434'
@@ -44,7 +46,7 @@ const OTP = generateOTP();
 //   
 
 const registerPostApi = (async (req, res) => {
-    let data = new Register(req.body);
+    let data = new Register({ ...req.body, imageName: '' });
     let getAllData = await Register.find()
     let userId = 0
     if (getAllData.length > 0) {
@@ -58,6 +60,30 @@ const registerPostApi = (async (req, res) => {
     delete result.__v;
     res.send(result);
 });
+
+const updateProfilePutApi = (async (req, res) => {
+    const userId = req.params.userId;
+    try {
+        let data = await Register.findOne({ userId });
+        if (!data) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+        data.userName = req.body?.userName || data.userName;
+        data.phoneNumber = req.body?.phoneNumber || data.phoneNumber;
+        data.email = req.body?.email || data.email;
+        data.password = req.body?.password || data.password;
+        data.dateOfBirth = req.body?.dateOfBirth || data.dateOfBirth;
+        let result = await data.save();
+        result = result.toObject();
+        delete result._id;
+        delete result.__v;
+        res.send(result);
+    } catch (error) {
+        console.error(error); // Log the error for debugging
+        res.status(500).send({ message: 'Internal Server Error' });
+    }
+});
+
 
 
 
@@ -91,16 +117,51 @@ const verifyOtp = ((req, res) => {
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 });
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/');
-    },
-    filename: function (req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+const updateImageName = async (userId, imageName, res) => {
+    console.warn("Check", userId, imageName, res);
+    res.status(500).json({ success: false, message: 'Error uploading image', error: error.message });
+    // try {
+    //     const updatedUser = await Register.findOneAndUpdate({ userId }, { image: imageName }, { new: true });
+    //     await updatedUser.save();
+    // } catch (error) {
+    //     res.status(500).json({ success: false, message: 'Error uploading image', error: error.message });
+}
+
+const uploadProfileImage = (requset, response) => {
+    console.warn("1====>", requset);
+    let fileImageName = ''
+    multer({
+        storage: multer.diskStorage({
+            destination: function (req, file, cb) {
+                cb(null, 'uploads/');
+            },
+            filename: function (req, file, cb) {
+                const imageName = file.fieldname + '-' + Date.now() + path.extname(file.originalname);
+                cb(null, imageName);
+                fileImageName = imageName
+            }
+        })
+    }).single("file");
+    // updateImageName(requset.params.userId, fileImageName, response);
+}
+
+
+const userImageUpload = (async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        // console.warn("=======>>", userId);
+    } catch (error) {
+        // res.status(500).send({ message: 'Internal Server Error' });
     }
+})
+
+const getImageApi = (async (req, res) => {
+    const imageName = req.params.imageName;
+    console.log('imageName', imageName)
+    res.sendFile(path.join(__dirname, 'uploads/', imageName));
 });
 
-const uploadProfileImage = multer({ storage }).single("file");
+
 
 const topCategoryListing = (async (req, res) => {
     let topCategoryAllData = await TopCategory.find();
@@ -130,7 +191,6 @@ const updateCategorySelection = (async (req, res) => {
             return res.status(404).json({ message: "User not found." });
         }
         const subCategory = nutrient.subCategoryData.find(item => item.subCategoryId == subCategoryId);
-        // console.warn("nutrient", nutrient?.subCategoryData);
         if (!subCategory) {
             return res.status(404).json({ message: "SubCategory not found." });
         }
@@ -143,41 +203,100 @@ const updateCategorySelection = (async (req, res) => {
     }
 })
 
+// Meal Planner
+
+
+const topCategoryMealsListing = (async (req, res) => {
+    let topCategoryAllData = await MealCategory.find();
+    console.log(topCategoryAllData)
+    topCategoryAllData = topCategoryAllData.map(item => {
+        const { _id, ...rest } = item.toObject();
+        return rest;
+    });
+    res.send(topCategoryAllData);
+});
+
+const subCategoryMealsListing = (async (req, res) => {
+    let topCategoryAllData = await MealCategory.find();
+    topCategoryAllData = topCategoryAllData.map(item => {
+        const { _id, ...rest } = item.toObject();
+        return rest;
+    });
+    res.send(topCategoryAllData);
+});
+
+
+
+const postMealSubCategory = (async (req, res) => {
+    const { recipeId, subCategoryId, isSelected } = req.body;
+    try {
+        const nutrient = await MealSubCategory.findOne({ recipeId });
+        if (!nutrient) {
+            return res.status(404).json({ message: "Recipe not found." });
+        }
+        const subCategory = nutrient.subCategoryData.find(item => item.subCategoryId == subCategoryId);
+        if (!subCategory) {
+            return res.status(404).json({ message: "SubCategory not found." });
+        }
+        subCategory.isSelected = isSelected;
+        const otherCollectionDoc = await MealPlanner.findOne({ recipeId });
+        if (!otherCollectionDoc) {
+            return res.status(404).json({ message: "Recipe not found in other collection." });
+        }
+        otherCollectionDoc.mealPlannerData.push(subCategory);
+        await nutrient.save()
+        await otherCollectionDoc.save();
+        res.json({ message: "Selection updated successfully." });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+})
+
+
+const checkApi = (async (req, res) => {
+    let userName = req.body.userName
+    let password = req.body.password
+    const getAllData = await Register.findOne({ userName, password });
+    if (getAllData?.userName == userName && getAllData?.password == password) {
+        res.send(getAllData);
+    } else {
+        return res.status(500).send("Username or password not exists.");
+    }
+});
+
+
+const getDatByMobileNumber = (async (req, res) => {
+    let phoneNumber = req.body.phoneNumber
+    const getUserDetailWithMobileNumber = await Register.findOne({ phoneNumber });
+    if (getUserDetailWithMobileNumber?.phoneNumber == phoneNumber) {
+        res.send(getUserDetailWithMobileNumber);
+    } else {
+        return res.status(500).send("User not exist");
+    }
+});
+const getDataByEmailId = (async (req, res) => {
+    let email = req.body.email
+    const getUserDetailWithEmailr = await Register.findOne({ email });
+    if (getUserDetailWithEmailr?.email == email) {
+        res.send(getUserDetailWithEmailr);
+    } else {
+        return res.status(500).send("User not exist");
+    }
+});
+
 
 
 
 const dummyCheckApi = ((req, res) => {
     res.json({ success: true, message: 'successfully' });
 });
-// const uploadProfileImage = multer({ storage }).single("file");
-// const uploadProfileImage = ((req, res) => {
-//     try {
-//         multer({
-//             limits: {
-//                 fileSize: 5 * 1024 * 1024,
-//             },
-//             storage: multer.diskStorage({
-//                 destination: function (req, file, cb) {
-//                     const dir = 'upload';
-//                     if (!fs.existsSync(dir)) {
-//                         fs.mkdirSync(dir);
-//                     }
-//                     cb(null, dir);
-//                 },
-//                 filename: function (req, file, cb) {
-//                     cb(null, file.originalname)
-//                 }
-//             })
-//         }).single("user_file")
-//     } catch (error) {
-//         console.error('error come in this image:', error);
-//         res.status(500).json({ success: false, message: 'Internal server error' });
-//     }
-// });
 
 
 
 
 
-
-module.exports = { registerPostApi, sendOtpWithPhonNumber, verifyOtp, uploadProfileImage, dummyCheckApi, topCategoryListing, subCategoryListing, updateCategorySelection };
+module.exports = {
+    registerPostApi, sendOtpWithPhonNumber, verifyOtp, uploadProfileImage, dummyCheckApi, topCategoryListing, subCategoryListing, updateCategorySelection, updateProfilePutApi,
+    topCategoryMealsListing, subCategoryMealsListing, postMealSubCategory, checkApi, getDatByMobileNumber, getDataByEmailId, getImageApi, userImageUpload
+};

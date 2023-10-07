@@ -5,6 +5,7 @@ const RegisterSchema = new mongoose.Schema({
     phoneNumber: String,
     email: String,
     password: String,
-    dateOfBirth: String
+    dateOfBirth: String,
+    imageName: String
 }, { versionKey: false });
 module.exports = { RegisterSchema };
